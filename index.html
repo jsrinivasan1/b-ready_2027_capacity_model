@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B-READY 2027 Capacity Model — Business Location</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;900&display=swap">
+<style>
+:root{
+  --bg:#F6F8FA; --panel:#FFFFFF; --ink:#16233A; --ink-soft:#51607A; --line:#DDE4EC;
+  --navy:#0F2B5B; --blue:#0071BC; --blue-soft:#8DC8E8;
+  --t1:#8DC8E8; --t2:#0071BC; --t3:#D9542B;
+  --ok:#1E7D46; --ok-bg:#E7F3EC; --warn:#9A6A00; --warn-bg:#FBF2DC; --bad:#B3261E; --bad-bg:#FBEAE8;
+  --track:#EAEFF4; --shadow:0 1px 2px rgba(15,43,91,.06),0 4px 14px rgba(15,43,91,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1522; --panel:#182238; --ink:#E8EDF5; --ink-soft:#9FB0C8; --line:#2A3A57;
+    --navy:#BBD3F5; --blue:#5AA9E0; --blue-soft:#3A5E82;
+    --t1:#4E86B4; --t2:#5AA9E0; --t3:#E0703F;
+    --ok:#5FC98A; --ok-bg:#15311F; --warn:#E0B24A; --warn-bg:#3A2E10; --bad:#EF7B72; --bad-bg:#3B1614;
+    --track:#20304C; --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1522; --panel:#182238; --ink:#E8EDF5; --ink-soft:#9FB0C8; --line:#2A3A57;
+  --navy:#BBD3F5; --blue:#5AA9E0; --blue-soft:#3A5E82;
+  --t1:#4E86B4; --t2:#5AA9E0; --t3:#E0703F;
+  --ok:#5FC98A; --ok-bg:#15311F; --warn:#E0B24A; --warn-bg:#3A2E10; --bad:#EF7B72; --bad-bg:#3B1614;
+  --track:#20304C; --shadow:none;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{background:var(--bg); color:var(--ink); font-family:'Source Sans 3', 'Segoe UI', system-ui, sans-serif; line-height:1.45; font-size:15px;}
+.wrap{max-width:1180px; margin:0 auto; padding:28px 20px 48px;}
+header h1{font-size:1.5rem; font-weight:900; color:var(--navy); letter-spacing:-.01em;}
+header p{color:var(--ink-soft); max-width:64ch; margin-top:4px;}
+.grid{display:grid; grid-template-columns:340px 1fr; gap:22px; margin-top:22px; align-items:start;}
+@media(max-width:880px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel); border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow);}
+.controls{padding:6px 18px 18px;}
+.cgroup{padding:14px 0 6px; border-bottom:1px solid var(--line);}
+.cgroup:last-child{border-bottom:none;}
+.cgroup h2{font-size:.95rem; font-weight:700; color:var(--navy); margin-bottom:8px;}
+.ctl{margin-bottom:12px;}
+.ctl .row{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+.ctl label{font-weight:600; font-size:.9rem;}
+.ctl output{font-weight:700; font-variant-numeric:tabular-nums; color:var(--blue); font-size:.92rem; white-space:nowrap;}
+input[type=range]{width:100%; accent-color:var(--blue); height:26px; cursor:pointer;}
+.hint{font-size:.78rem; color:var(--ink-soft); margin-top:-2px;}
+.seg{display:flex; border:1px solid var(--line); border-radius:7px; overflow:hidden; margin-top:6px;}
+.seg button{flex:1; border:none; background:transparent; color:var(--ink-soft); font:inherit; font-size:.84rem; font-weight:600; padding:6px 4px; cursor:pointer;}
+.seg button[aria-pressed="true"]{background:var(--blue); color:#fff;}
+.switchrow{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+.switchrow label{font-weight:600; font-size:.9rem;}
+.sw{position:relative; width:40px; height:22px; flex:none;}
+.sw input{opacity:0; width:100%; height:100%; position:absolute; cursor:pointer; margin:0;}
+.sw span{position:absolute; inset:0; background:var(--track); border-radius:22px; transition:.15s; pointer-events:none;}
+.sw span::after{content:""; position:absolute; width:16px; height:16px; border-radius:50%; background:var(--panel); top:3px; left:3px; transition:.15s; box-shadow:0 1px 2px rgba(0,0,0,.25);}
+.sw input:checked + span{background:var(--blue);}
+.sw input:checked + span::after{left:21px;}
+.sw input:focus-visible + span{outline:2px solid var(--blue); outline-offset:2px;}
+.resetbtn{width:100%; margin-top:14px; padding:8px; border:1px solid var(--line); background:transparent; color:var(--ink-soft); border-radius:7px; font:inherit; font-size:.85rem; font-weight:600; cursor:pointer;}
+.resetbtn:hover{color:var(--blue); border-color:var(--blue);}
+
+.verdict{border-radius:10px; padding:16px 20px; display:flex; gap:16px; align-items:center; border:1px solid var(--line);}
+.verdict.ok{background:var(--ok-bg); border-color:color-mix(in srgb,var(--ok) 40%,transparent);}
+.verdict.warn{background:var(--warn-bg); border-color:color-mix(in srgb,var(--warn) 40%,transparent);}
+.verdict.bad{background:var(--bad-bg); border-color:color-mix(in srgb,var(--bad) 40%,transparent);}
+.verdict .light{width:14px; height:14px; border-radius:50%; flex:none;}
+.verdict.ok .light{background:var(--ok);} .verdict.warn .light{background:var(--warn);} .verdict.bad .light{background:var(--bad);}
+.verdict h2{font-size:1.12rem; font-weight:800;}
+.verdict.ok h2{color:var(--ok);} .verdict.warn h2{color:var(--warn);} .verdict.bad h2{color:var(--bad);}
+.verdict p{font-size:.9rem; color:var(--ink); margin-top:2px;}
+
+.clocks{margin-top:18px; padding:18px 20px;}
+.clocks h2, .tiers h2{font-size:1rem; font-weight:800; color:var(--navy);}
+.clocks .sub{font-size:.83rem; color:var(--ink-soft); margin-bottom:14px;}
+.clock{margin-bottom:20px;}
+.clock:last-child{margin-bottom:2px;}
+.clock .head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; gap:10px; flex-wrap:wrap;}
+.clock .head b{font-size:.92rem;}
+.clock .head span{font-size:.85rem; font-variant-numeric:tabular-nums; color:var(--ink-soft);}
+.barwrap{position:relative; height:34px; background:var(--track); border-radius:6px; overflow:hidden;}
+.stack{position:absolute; inset:0; display:flex;}
+.stack div{height:100%; transition:width .25s ease;}
+.s1{background:var(--t1);} .s2{background:var(--t2);} .s3{background:var(--t3);}
+.capline{position:absolute; top:-5px; bottom:-5px; width:3px; background:var(--ink); border-radius:2px; transition:left .25s ease;}
+.capflag{position:absolute; top:-22px; transform:translateX(-50%); font-size:.72rem; font-weight:700; color:var(--ink); white-space:nowrap; transition:left .25s ease;}
+.barouter{position:relative; padding-top:22px; padding-bottom:6px;}
+.gapnote{font-size:.82rem; margin-top:5px; font-variant-numeric:tabular-nums;}
+.gapnote.pos{color:var(--ok);} .gapnote.neg{color:var(--bad); font-weight:700;} .gapnote.tight{color:var(--warn); font-weight:700;}
+
+.tiers{margin-top:18px; padding:18px 20px;}
+table{width:100%; border-collapse:collapse; margin-top:10px; font-size:.9rem;}
+th{text-align:left; font-size:.78rem; color:var(--ink-soft); font-weight:700; border-bottom:1px solid var(--line); padding:4px 6px;}
+th.num, td.num{text-align:right; font-variant-numeric:tabular-nums;}
+td{padding:6px 6px; border-bottom:1px solid var(--line);}
+tr:last-child td{border-bottom:none;}
+td .dot{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:7px; vertical-align:baseline;}
+tr.total td{font-weight:800; border-top:2px solid var(--line);}
+.footrow{display:flex; gap:18px; flex-wrap:wrap; margin-top:14px;}
+.stat{flex:1 1 160px; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:10px 12px;}
+.stat b{display:block; font-size:1.25rem; font-weight:900; color:var(--navy); font-variant-numeric:tabular-nums;}
+.stat span{font-size:.78rem; color:var(--ink-soft);}
+.sens{margin-top:16px; padding:14px 20px; font-size:.9rem; border-left:4px solid var(--blue);}
+.sens b{color:var(--blue);}
+footer{margin-top:22px; font-size:.78rem; color:var(--ink-soft); max-width:90ch;}
+@media (prefers-reduced-motion: reduce){ .stack div,.capline,.capflag,.sw span,.sw span::after{transition:none;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>B-READY 2027 Capacity Model — Business Location</h1>
+  <p>Adjust the assumptions on the left; the model tests whether data collection closes on both clocks — the fixed Dec–May collection window and the full span through the Jul 15 coding deadline. The unit of work is the economy-questionnaire: BL runs two questionnaires per economy (Property Transfer, Construction Permitting), each with its own expert pool. 2026 reference: 132 team-managed economies, 7 analysts, ~1.25 analyst-weeks per economy across both questionnaires.</p>
+</header>
+
+<div class="grid">
+  <aside class="panel controls" aria-label="Model assumptions">
+
+    <div class="cgroup">
+      <h2>Coverage &amp; team</h2>
+      <div class="ctl"><div class="row"><label for="econ">Economies covered</label><output id="econV"></output></div>
+        <input type="range" id="econ" min="130" max="200" step="1"></div>
+      <div class="ctl"><div class="row"><label for="qper">Questionnaires per economy</label><output id="qperV"></output></div>
+        <input type="range" id="qper" min="1" max="3" step="1">
+        <p class="hint">BL = 2 (Property Transfer, Construction Permitting), each with its own expert pool.</p></div>
+      <div class="ctl"><div class="row"><label for="analysts">Analysts</label><output id="analystsV"></output></div>
+        <input type="range" id="analysts" min="2" max="7" step="1"></div>
+      <div class="switchrow"><label for="central">Centralized team</label>
+        <span class="sw"><input type="checkbox" id="central"><span></span></span></div>
+      <div id="centralBlock" hidden>
+        <div class="ctl"><div class="row"><label for="centralN">Economies it covers</label><output id="centralNV"></output></div>
+          <input type="range" id="centralN" min="0" max="50" step="1"></div>
+        <div class="seg" role="group" aria-label="Central team allocation">
+          <button id="allocT3" aria-pressed="true">Tier 3 first</button>
+          <button id="allocFlat" aria-pressed="false">Proportional</button>
+        </div>
+        <p class="hint" style="margin-top:5px">Tier 3 first assigns central capacity to the heaviest economies.</p>
+      </div>
+    </div>
+
+    <div class="cgroup">
+      <h2>Expert behavior</h2>
+      <div class="ctl"><div class="row"><label for="ret">Expert retention (per questionnaire)</label><output id="retV"></output></div>
+        <input type="range" id="ret" min="30" max="95" step="1">
+        <p class="hint">Share of 2026 experts who re-commit, per expert pool. An economy is fully light only if both its questionnaires retain.</p></div>
+      <div class="ctl"><div class="row"><label for="reform">Reform incidence (per area)</label><output id="reformV"></output></div>
+        <input type="range" id="reform" min="5" max="50" step="1">
+        <p class="hint">Repeat questionnaires whose area has AI-detected regulatory change.</p></div>
+      <div class="ctl"><div class="row"><label for="t3">Heavy-economy share</label><output id="t3V"></output></div>
+        <input type="range" id="t3" min="5" max="30" step="1">
+        <p class="hint">New economies plus thin-expert-pool LICs and small states.</p></div>
+    </div>
+
+    <div class="cgroup">
+      <h2>Effort per questionnaire (analyst-weeks)</h2>
+      <div class="ctl"><div class="row"><label for="ovh">Process overhead — Dynamics/SuSo admin &amp; tracking</label><output id="ovhV"></output></div>
+        <input type="range" id="ovh" min="0" max="0.4" step="0.05">
+        <p class="hint">Creating and tagging experts in MS Dynamics, monitoring SuSo submissions, manual status reconciliation. Calibrate from experience.</p></div>
+      <div class="switchrow"><label for="tooling">Tracking tooling built (SuSo↔Dynamics sync + dashboard)</label>
+        <span class="sw"><input type="checkbox" id="tooling"><span></span></span></div>
+      <div id="toolingBlock" hidden>
+        <div class="ctl"><div class="row"><label for="toolsav">Overhead reduction from tooling</label><output id="toolsavV"></output></div>
+          <input type="range" id="toolsav" min="0" max="90" step="5"></div>
+      </div>
+      <div class="ctl"><div class="row"><label for="p23">Pillar II/III fresh collection — all questionnaires</label><output id="p23V"></output></div>
+        <input type="range" id="p23" min="0.1" max="0.5" step="0.05">
+        <p class="hint">De facto content asked fresh every cycle; never confirms or carries forward. Experience anchor: 0.2–0.3.</p></div>
+      <div class="ctl"><div class="row"><label for="c1">Tier 1 add-on — Pillar I confirm</label><output id="c1V"></output></div>
+        <input type="range" id="c1" min="0" max="0.3" step="0.05"></div>
+      <div class="ctl"><div class="row"><label for="c2">Tier 2 add-on — reforms / re-recruitment</label><output id="c2V"></output></div>
+        <input type="range" id="c2" min="0.05" max="0.6" step="0.05"></div>
+      <div class="ctl"><div class="row"><label for="c3">Tier 3 add-on — full recruitment &amp; Pillar I</label><output id="c3V"></output></div>
+        <input type="range" id="c3" min="0.2" max="1.5" step="0.05"></div>
+      <div class="ctl"><div class="row"><label for="shared">Economy-level shared work (consistency, coding the record)</label><output id="sharedV"></output></div>
+        <input type="range" id="shared" min="0" max="0.3" step="0.05">
+        <p class="hint">Per economy, on top of its questionnaires — cross-questionnaire checks and final coding.</p></div>
+      <div class="ctl"><div class="row"><label for="csplit">Collection-side share of effort</label><output id="csplitV"></output></div>
+        <input type="range" id="csplit" min="30" max="70" step="5">
+        <p class="hint">Recruitment and chasing vs. coding and review. Pull the actual 2026 split to calibrate.</p></div>
+    </div>
+
+    <div class="cgroup">
+      <h2>Calendar</h2>
+      <div class="ctl"><div class="row"><label for="wc">Collection window (weeks)</label><output id="wcV"></output></div>
+        <input type="range" id="wc" min="18" max="26" step="0.5"></div>
+      <div class="ctl"><div class="row"><label for="tail">Coding tail after May 29 (weeks)</label><output id="tailV"></output></div>
+        <input type="range" id="tail" min="0" max="10" step="0.5"></div>
+      <div class="ctl"><div class="row"><label for="holiday">Holiday shutdown (working days)</label><output id="holidayV"></output></div>
+        <input type="range" id="holiday" min="0" max="15" step="1">
+        <p class="hint">Nobody works over Christmas — deducted from analyst capacity on both clocks. Experts keep the questionnaires, so their elapsed runway is unaffected.</p></div>
+    </div>
+
+    <button class="resetbtn" id="reset">Reset to baseline assumptions</button>
+  </aside>
+
+  <main>
+    <div class="verdict panel" id="verdict" role="status">
+      <div class="light"></div>
+      <div><h2 id="verdictTitle"></h2><p id="verdictText"></p></div>
+    </div>
+
+    <section class="clocks panel" aria-label="Capacity against workload">
+      <h2>The two clocks</h2>
+      <p class="sub">Stacked bars show workload by tier; the marker is team capacity on that clock. Work to the right of the marker does not fit.</p>
+
+      <div class="clock">
+        <div class="head"><b>Collection clock — Dec 16 to May 29</b><span id="colNums"></span></div>
+        <div class="barouter">
+          <div class="barwrap">
+            <div class="stack"><div class="s1" id="colS1"></div><div class="s2" id="colS2"></div><div class="s3" id="colS3"></div></div>
+          </div>
+          <div class="capflag" id="colFlag">capacity</div>
+          <div class="capline" id="colCap"></div>
+        </div>
+        <p class="gapnote" id="colGap"></p>
+      </div>
+
+      <div class="clock">
+        <div class="head"><b>Full span — Dec 16 to Jul 15</b><span id="totNums"></span></div>
+        <div class="barouter">
+          <div class="barwrap">
+            <div class="stack"><div class="s1" id="totS1"></div><div class="s2" id="totS2"></div><div class="s3" id="totS3"></div></div>
+          </div>
+          <div class="capflag" id="totFlag">capacity</div>
+          <div class="capline" id="totCap"></div>
+        </div>
+        <p class="gapnote" id="totGap"></p>
+      </div>
+    </section>
+
+    <section class="tiers panel" aria-label="Tier breakdown">
+      <h2>Team-managed workload by tier</h2>
+      <table>
+        <thead><tr><th>Tier</th><th class="num">Questionnaires</th><th class="num">AW each</th><th class="num">Total AW</th></tr></thead>
+        <tbody>
+          <tr><td><span class="dot" style="background:var(--t1)"></span>Tier 1 — retained expert, no reform</td><td class="num" id="n1"></td><td class="num" id="a1"></td><td class="num" id="w1"></td></tr>
+          <tr><td><span class="dot" style="background:var(--t2)"></span>Tier 2 — reforms or expert turnover</td><td class="num" id="n2"></td><td class="num" id="a2"></td><td class="num" id="w2"></td></tr>
+          <tr><td><span class="dot" style="background:var(--t3)"></span>Tier 3 — new / thin expert pool</td><td class="num" id="n3"></td><td class="num" id="a3"></td><td class="num" id="w3"></td></tr>
+          <tr><td>Economy-level shared work</td><td class="num" id="nS"></td><td class="num" id="aS"></td><td class="num" id="wS"></td></tr>
+          <tr class="total"><td>Total team-managed</td><td class="num" id="nT"></td><td class="num" id="aT"></td><td class="num" id="wT"></td></tr>
+        </tbody>
+      </table>
+      <div class="footrow">
+        <div class="stat"><b id="awPerEcon"></b><span>required AW per economy (2026 revealed: 1.25)</span></div>
+        <div class="stat"><b id="cutVs2026"></b><span>required efficiency gain vs. the 2026 process</span></div>
+        <div class="stat"><b id="p23Stat"></b><span>fresh Pillar II/III workload — <span id="p23StatPct"></span></span></div>
+        <div class="stat"><b id="ovhStat"></b><span>Dynamics/SuSo overhead — <span id="ovhStatPct"></span></span></div>
+        <div class="stat"><b id="centralStat"></b><span id="centralStatLabel">economies handled centrally</span></div>
+      </div>
+    </section>
+
+    <div class="sens panel" id="sens"></div>
+  </main>
+</div>
+
+<footer>Planning model, not a forecast. The unit of work is the economy-questionnaire (BL: Property Transfer and Construction Permitting, separate expert pools), with tiering, retention, and reform incidence applied per questionnaire — so an economy can be light on one questionnaire and heavy on the other. Per-questionnaire cost = Dynamics/SuSo process overhead (reducible by tooling) + fresh Pillar II/III content (reducible only by instrument design) + tier add-on for the Pillar I / recruitment side; economy-level shared work (cross-questionnaire consistency and final coding) is added per economy. Carry-forward, where invoked, applies to Pillar I only; expert non-response produces Pillar II/III data gaps rather than cost savings. Both clocks must close: collection-side work within the Dec–May window, and all work within the span ending Jul 15. TL time is excluded throughout, consistent with the 2026 reference cost of ~1.25 AW per economy across both questionnaires. The holiday shutdown is converted at 5 working days per analyst-week and deducted from analyst capacity on both clocks; expert-side elapsed time is not reduced, since questionnaires remain in the field over the break.</footer>
+</div>
+
+<script>
+const D = { econ:170, qper:2, analysts:4, central:false, centralN:32, allocT3:true,
+  ret:70, reform:25, t3:15, ovh:0.15, tooling:false, toolsav:60, p23:0.25,
+  c1:0.05, c2:0.2, c3:0.6, shared:0.1, csplit:50, wc:23.5, tail:6.5, holiday:10 };
+
+const SLIDERS = ["econ","qper","analysts","centralN","ret","reform","t3","ovh","toolsav","p23","c1","c2","c3","shared","csplit","wc","tail","holiday"];
+const els = {};
+SLIDERS.forEach(id=>{
+  els[id]=document.getElementById(id);
+  els[id+"V"]=document.getElementById(id+"V");
+  els[id].addEventListener("input", update);
+});
+const central = document.getElementById("central");
+const centralBlock = document.getElementById("centralBlock");
+const tooling = document.getElementById("tooling");
+const toolingBlock = document.getElementById("toolingBlock");
+const allocT3btn = document.getElementById("allocT3");
+const allocFlatbtn = document.getElementById("allocFlat");
+let allocT3 = true;
+central.addEventListener("change", ()=>{ centralBlock.hidden = !central.checked; update(); });
+tooling.addEventListener("change", ()=>{ toolingBlock.hidden = !tooling.checked; update(); });
+allocT3btn.addEventListener("click", ()=>{ allocT3=true; syncAlloc(); update(); });
+allocFlatbtn.addEventListener("click", ()=>{ allocT3=false; syncAlloc(); update(); });
+function syncAlloc(){ allocT3btn.setAttribute("aria-pressed", allocT3); allocFlatbtn.setAttribute("aria-pressed", !allocT3); }
+document.getElementById("reset").addEventListener("click", ()=>{ setDefaults(); update(); });
+
+function setDefaults(){
+  for (const k of SLIDERS) els[k].value = D[k];
+  central.checked = D.central; centralBlock.hidden = !D.central;
+  tooling.checked = D.tooling; toolingBlock.hidden = !D.tooling;
+  allocT3 = D.allocT3; syncAlloc();
+}
+
+const f1 = x => x.toFixed(1), f0 = x => Math.round(x).toString();
+
+function compute(){
+  const E=+els.econ.value, Q=+els.qper.value, A=+els.analysts.value,
+        r=+els.ret.value/100, rf=+els.reform.value/100, t3s=+els.t3.value/100,
+        p23=+els.p23.value, shared=+els.shared.value,
+        s=+els.csplit.value/100, Wc=+els.wc.value, tail=+els.tail.value,
+        hol=(+els.holiday.value)/5;
+  const ovhEff = (+els.ovh.value) * (tooling.checked ? (1 - (+els.toolsav.value)/100) : 1);
+  const cost1 = ovhEff + p23 + +els.c1.value;
+  const cost2 = ovhEff + p23 + +els.c2.value;
+  const cost3 = ovhEff + p23 + +els.c3.value;
+  const WcEff=Math.max(Wc-hol,0);
+  const useCentral = central.checked, C = useCentral ? Math.min(+els.centralN.value, E) : 0;
+
+  // Economies handled centrally are removed whole (both questionnaires).
+  let e3 = E*t3s, eRep = E-e3;
+  let me3=e3, meRep=eRep, taken=0;
+  if (C>0){
+    if (allocT3){
+      const take3=Math.min(me3,C); me3-=take3; taken=take3;
+      const takeR=Math.min(meRep,C-taken); meRep-=takeR; taken+=takeR;
+    } else {
+      const k=(E-C)/E; me3*=k; meRep*=k; taken=C;
+    }
+  }
+  const M = me3+meRep; // team-managed economies
+  const q3 = me3*Q, repQ = meRep*Q;
+  const q1 = repQ*r*(1-rf), q2 = repQ-q1;
+
+  const w1=q1*cost1, w2=q2*cost2, w3=q3*cost3, wS=M*shared;
+  const wT=w1+w2+w3+wS;
+  const needCol=wT*s, needTot=wT;
+  const capCol=A*WcEff, capTot=A*(WcEff+tail);
+  return {E,Q,A,C:taken,M,q1,q2,q3,w1,w2,w3,wS,wT,cost1,cost2,cost3,shared,p23,ovhEff,
+          needCol,needTot,capCol,capTot,s,Wc:WcEff,tail,hol};
+}
+
+function bar(prefix, w1,w2,w3, cap, scale){
+  const p=id=>document.getElementById(prefix+id);
+  p("S1").style.width=(w1/scale*100)+"%";
+  p("S2").style.width=(w2/scale*100)+"%";
+  p("S3").style.width=(w3/scale*100)+"%";
+  const cp=Math.min(cap/scale*100,99.5);
+  p("Cap").style.left=cp+"%";
+  p("Flag").style.left=cp+"%";
+}
+
+function gapText(el, need, cap, unit){
+  const gap=cap-need, pct=need>0?gap/need:1;
+  el.classList.remove("pos","neg","tight");
+  if (gap<0){ el.classList.add("neg"); el.textContent=`Short by ${f1(-gap)} ${unit} — does not fit.`; }
+  else if (pct<0.10){ el.classList.add("tight"); el.textContent=`Fits with only ${f1(gap)} ${unit} of slack (${Math.round(pct*100)}%).`; }
+  else { el.classList.add("pos"); el.textContent=`Fits with ${f1(gap)} ${unit} of slack (${Math.round(pct*100)}%).`; }
+  return gap;
+}
+
+function update(){
+  els.econV.textContent=els.econ.value;
+  els.qperV.textContent=els.qper.value;
+  els.analystsV.textContent=els.analysts.value;
+  els.centralNV.textContent=els.centralN.value;
+  els.retV.textContent=els.ret.value+"%";
+  els.reformV.textContent=els.reform.value+"%";
+  els.t3V.textContent=els.t3.value+"%";
+  els.ovhV.textContent=(+els.ovh.value).toFixed(2);
+  els.toolsavV.textContent="−"+els.toolsav.value+"%";
+  els.p23V.textContent=(+els.p23.value).toFixed(2);
+  els.c1V.textContent="+"+(+els.c1.value).toFixed(2);
+  els.c2V.textContent="+"+(+els.c2.value).toFixed(2);
+  els.c3V.textContent="+"+(+els.c3.value).toFixed(2);
+  els.sharedV.textContent=(+els.shared.value).toFixed(2);
+  els.csplitV.textContent=els.csplit.value+"%";
+  els.wcV.textContent=els.wc.value;
+  els.tailV.textContent=els.tail.value;
+  els.holidayV.textContent=els.holiday.value+" d";
+
+  const m=compute();
+  const scale=Math.max(m.needTot, m.capTot)*1.08;
+
+  // Shared work is folded into the stacks proportionally so bars still sum to total need.
+  const kS = m.wT>0 ? m.wT/(m.wT-m.wS||1) : 1;
+  bar("col", m.w1*kS*m.s, m.w2*kS*m.s, m.w3*kS*m.s, m.capCol, scale);
+  bar("tot", m.w1*kS, m.w2*kS, m.w3*kS, m.capTot, scale);
+  document.getElementById("colNums").textContent=`${f1(m.needCol)} AW of collection work vs ${f1(m.capCol)} AW capacity (net of ${f1(m.hol)}-wk shutdown)`;
+  document.getElementById("totNums").textContent=`${f1(m.needTot)} AW total vs ${f1(m.capTot)} AW capacity`;
+  const gCol=gapText(document.getElementById("colGap"), m.needCol, m.capCol, "AW");
+  const gTot=gapText(document.getElementById("totGap"), m.needTot, m.capTot, "AW");
+
+  const v=document.getElementById("verdict"), vt=document.getElementById("verdictTitle"), vx=document.getElementById("verdictText");
+  v.classList.remove("ok","warn","bad");
+  const minPct=Math.min(gCol/Math.max(m.needCol,.001), gTot/Math.max(m.needTot,.001));
+  if (gCol<0 || gTot<0){
+    v.classList.add("bad"); vt.textContent="Does not close";
+    const which = gCol<0 && gTot<0 ? "both clocks" : (gCol<0 ? "the Dec–May collection clock" : "the full span to Jul 15");
+    vx.textContent=`The plan fails on ${which}. Levers: analysts, central coverage of Tier 3, tooling to cut Dynamics/SuSo overhead, a shorter P II/III module, retention. Carry-forward relieves only the Pillar I side — non-response still leaves Pillar II/III gaps.`;
+  } else if (minPct<0.10){
+    v.classList.add("warn"); vt.textContent="Marginal — closes with no room for error";
+    vx.textContent="The arithmetic works, but one analyst departure, a retention shortfall, or a slow Tier-3 quarter breaks it. Treat mitigations as required, not optional.";
+  } else {
+    v.classList.add("ok"); vt.textContent="Closes with workable slack";
+    vx.textContent=`Both clocks fit with at least ${Math.round(minPct*100)}% slack. The binding side is ${gCol/Math.max(m.needCol,.001) < gTot/Math.max(m.needTot,.001) ? "the Dec–May collection window" : "total effort through Jul 15"} — protect it first.`;
+  }
+
+  const set=(id,val)=>document.getElementById(id).textContent=val;
+  set("n1",f0(m.q1)); set("n2",f0(m.q2)); set("n3",f0(m.q3)); set("nT",f0(m.q1+m.q2+m.q3));
+  set("a1",m.cost1.toFixed(2)); set("a2",m.cost2.toFixed(2)); set("a3",m.cost3.toFixed(2));
+  set("nS",f0(m.M)+" econ"); set("aS",m.shared.toFixed(2)); set("wS",f1(m.wS));
+  set("aT","—");
+  set("w1",f1(m.w1)); set("w2",f1(m.w2)); set("w3",f1(m.w3)); set("wT",f1(m.wT));
+
+  const qTot=m.q1+m.q2+m.q3;
+  set("awPerEcon", m.M>0 ? (m.capTot/m.M).toFixed(2) : "—");
+  const cut = m.M>0 ? Math.max(0, 1-(m.capTot/m.M)/1.25) : 0;
+  set("cutVs2026", (m.capTot/Math.max(m.M,.001))>=1.25 ? "none" : "−"+Math.round(cut*100)+"%");
+  const p23Load=qTot*m.p23;
+  set("p23Stat", f1(p23Load)+" AW");
+  set("p23StatPct", m.wT>0 ? Math.round(p23Load/m.wT*100)+"% of total — irreducible except by instrument design" : "");
+  const ovhLoad=qTot*m.ovhEff;
+  set("ovhStat", f1(ovhLoad)+" AW");
+  set("ovhStatPct", m.wT>0 ? Math.round(ovhLoad/m.wT*100)+"% of total — reducible by tooling" : "");
+  set("centralStat", central.checked ? f0(m.C) : "0");
+
+  const addAW=(m.Wc+m.tail).toFixed(1);
+  const t3equiv=(m.Wc+m.tail)/m.cost3;
+  document.getElementById("sens").innerHTML =
+    `<b>Sensitivity:</b> one additional analyst adds ${addAW} AW over the full span — the equivalent of ${f1(t3equiv)} Tier-3 questionnaires at full cost. `+
+    `On the collection clock alone, the same analyst adds ${m.Wc.toFixed(1)} AW of the scarcest resource: Dec–May recruitment and chasing capacity. `+
+    `Tooling that removes 0.05 AW of overhead per questionnaire returns ${f1(qTot*0.05)} AW across the portfolio.`;
+}
+
+setDefaults();
+update();
+</script>
+</body>
+</html>
